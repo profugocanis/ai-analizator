@@ -35,6 +35,63 @@
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.2);
     }
+
+    /* Markdown formatting styles */
+    .markdown-output {
+      font-family: 'Inter', sans-serif;
+      line-height: 1.7;
+      color: #e2e8f0;
+    }
+    .markdown-output h1, .markdown-output h2, .markdown-output h3, .markdown-output h4 {
+      font-weight: 700;
+      margin: 1.5rem 0 0.75rem 0;
+      color: #f1f5f9;
+    }
+    .markdown-output h1 { font-size: 1.5rem; border-bottom: 2px solid #6366f1; padding-bottom: 0.5rem; }
+    .markdown-output h2 { font-size: 1.25rem; color: #a5b4fc; }
+    .markdown-output h3 { font-size: 1.125rem; color: #c4b5fd; }
+    .markdown-output h4 { font-size: 1rem; color: #ddd6fe; }
+    .markdown-output strong, .markdown-output b {
+      font-weight: 600;
+      color: #fbbf24;
+    }
+    .markdown-output em, .markdown-output i {
+      font-style: italic;
+      color: #60a5fa;
+    }
+    .markdown-output ul, .markdown-output ol {
+      margin: 1rem 0;
+      padding-left: 1.5rem;
+    }
+    .markdown-output li {
+      margin: 0.5rem 0;
+      color: #cbd5e1;
+    }
+    .markdown-output p {
+      margin: 1rem 0;
+      color: #cbd5e1;
+    }
+    .markdown-output code {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 0.2rem 0.4rem;
+      border-radius: 0.25rem;
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      color: #34d399;
+      font-size: 0.9em;
+    }
+    .markdown-output blockquote {
+      border-left: 4px solid #6366f1;
+      padding-left: 1rem;
+      margin: 1rem 0;
+      font-style: italic;
+      color: #94a3b8;
+    }
+    .markdown-output hr {
+      border: none;
+      height: 1px;
+      background: linear-gradient(to right, transparent, #6366f1, transparent);
+      margin: 2rem 0;
+    }
   </style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 font-inter">
@@ -111,7 +168,7 @@
               <h2 class="text-2xl font-bold text-white">AI Analysis</h2>
             </div>
             <div class="bg-black/20 backdrop-blur-sm rounded-2xl border border-white/10 p-6">
-              <pre id="output" class="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap overflow-auto max-h-96 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">AI analysis will appear here...</pre>
+              <div id="output" class="markdown-output text-gray-300 text-sm leading-relaxed overflow-auto max-h-96 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">AI analysis will appear here...</div>
             </div>
           </div>
         </div>
@@ -192,15 +249,56 @@ News Articles to Analyze:
              || 'No response text found.';
     }
 
+    function formatMarkdown(text) {
+      // Basic markdown to HTML conversion
+      let html = text
+        // Headers
+        .replace(/^#### (.*$)/gm, '<h4>$1</h4>')
+        .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+        .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+        .replace(/^# (.*$)/gm, '<h1>$1</h1>')
+        // Bold
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/__(.*?)__/g, '<strong>$1</strong>')
+        // Italic
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/_(.*?)_/g, '<em>$1</em>')
+        // Code
+        .replace(/`(.*?)`/g, '<code>$1</code>')
+        // Horizontal rule
+        .replace(/^---$/gm, '<hr>')
+        // Blockquotes
+        .replace(/^> (.*)$/gm, '<blockquote>$1</blockquote>')
+        // Bullet points
+        .replace(/^\s*[\*\-\+]\s+(.+)$/gm, '<li>$1</li>')
+        // Numbered lists
+        .replace(/^\s*\d+\.\s+(.+)$/gm, '<li>$1</li>')
+        // Line breaks
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/\n/g, '<br>');
+
+      // Wrap consecutive list items in ul/ol tags
+      html = html.replace(/(<li>.*?<\/li>)(\s*<li>.*?<\/li>)*/g, function(match) {
+        return '<ul>' + match + '</ul>';
+      });
+
+      // Wrap in paragraphs if needed
+      if (!html.startsWith('<h') && !html.startsWith('<ul') && !html.startsWith('<ol')) {
+        html = '<p>' + html + '</p>';
+      }
+
+      return html;
+    }
+
     document.getElementById('run').onclick = async () => {
       const k1 = document.getElementById('marketauxKey').value.trim();
       const k2 = document.getElementById('geminiKey').value.trim();
       const tickers = document.getElementById('tickers').value.trim();
       const output = document.getElementById('output');
-      const newsOutput = document.getElementById('news-output'); // Get the news output element
+      const newsOutput = document.getElementById('news-output');
 
       // Clear previous results
-      output.textContent = 'Preparing to run analysis...';
+      output.innerHTML = 'Preparing to run analysis...';
       newsOutput.textContent = '';
 
       if (k1) {
@@ -211,29 +309,28 @@ News Articles to Analyze:
       }
 
       if (!k1 || !k2 || !tickers) {
-        output.textContent = 'Error: Please fill in all API keys and tickers.';
+        output.innerHTML = 'Error: Please fill in all API keys and tickers.';
         return;
       }
 
-      output.textContent = 'Loading news from MarketAux...';
+      output.innerHTML = 'Loading news from MarketAux...';
       try {
         const news = await fetchNews(tickers, 5, k1);
         if (news.length === 0) {
-           output.textContent = 'No news articles found for the given tickers. Try different ones.';
+           output.innerHTML = 'No news articles found for the given tickers. Try different ones.';
            newsOutput.textContent = 'No news to display.';
            return;
         }
 
-        // --- ADDED: Display the fetched news headlines ---
         const formattedNews = news.map((headline, index) => `${index + 1}. ${headline}`).join('\n\n');
         newsOutput.textContent = formattedNews;
 
-        output.textContent = `Found ${news.length} articles. Analyzing with Gemini AI...`;
+        output.innerHTML = `Found ${news.length} articles. Analyzing with Gemini AI...`;
         const analysis = await analyzeWithAI(news, k2);
-        output.textContent = analysis;
+        output.innerHTML = formatMarkdown(analysis);
       } catch (err) {
-        output.textContent = 'Error: ' + err.message;
-        newsOutput.textContent = 'Could not fetch news due to an error.'; // Also update news section on error
+        output.innerHTML = 'Error: ' + err.message;
+        newsOutput.textContent = 'Could not fetch news due to an error.';
       }
     };
 

@@ -5,8 +5,11 @@
   <title>Trading AI Analyzer</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 2rem; }
+    h1, h2 { border-bottom: 2px solid #eee; padding-bottom: 0.5rem; }
     input, button { padding: 0.5rem; margin: 0.5rem 0; width: 100%; box-sizing: border-box; }
-    pre { background: #f4f4f4; padding: 1rem; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; }
+    button { background-color: #007bff; color: white; border: none; cursor: pointer; font-size: 1rem; }
+    button:hover { background-color: #0056b3; }
+    pre { background: #f4f4f4; padding: 1rem; border: 1px solid #ddd; border-radius: 4px; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; }
   </style>
 </head>
 <body>
@@ -18,7 +21,14 @@
   <label for="tickers">Tickers (comma-separated)</label>
   <input id="tickers" placeholder="e.g. ^DJI,BTC,AAPL" />
   <button id="run">Run Analysis</button>
-  <pre id="output"></pre>
+
+  <!-- Section to display the fetched news articles -->
+  <h2>Fetched News</h2>
+  <pre id="news-output">News articles will appear here after fetching...</pre>
+
+  <!-- Section to display the final AI analysis -->
+  <h2>AI Analysis</h2>
+  <pre id="output">AI analysis will appear here...</pre>
 
   <script>
     // --- Key constants for localStorage ---
@@ -53,23 +63,23 @@
     async function analyzeWithAI(headlines, apiKey) {
       const promptHeader = `
 Role: You are an expert financial analyst and risk assessor.
-Task: Perform a comprehensive sentiment and impact analysis of the following news article. Provide your output in a clear, structured format.
+Task: Perform a comprehensive sentiment and impact analysis of the following news articles. Provide your output in a clear, structured format.
 Analysis Dimensions:
 1. Overall Sentiment: Classify as Bullish, Bearish, or Neutral.
 2. Sentiment Score: Provide a score from -1.0 (extremely bearish) to +1.0 (extremely bullish).
 3. Key Entities Mentioned: List the primary companies, people, or products involved.
-4. Core Thesis: In a single sentence, what is the main argument or piece of information in the article?
+4. Core Thesis: In a single sentence, what is the main argument or piece of information in the articles?
 5. Justification: Briefly explain the reasoning behind your sentiment score, citing specific evidence from the text.
 6. Potential Impact & Time Horizon: Describe the likely impact on the key entity's stock price and specify if it's short-term (days/weeks) or long-term (quarters/years).
 7. Identified Risks & Caveats: What are the potential risks, counterarguments, or uncertainties mentioned or implied in the text?
 
-News Article to Analyze:
+News Articles to Analyze:
 `;
       const payload = {
         contents: [{ parts: [{ text: promptHeader + headlines.join('\n') }] }]
       };
       const res = await fetch(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', // Updated to a more common model
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
         {
           method: 'POST',
           headers: {
@@ -93,37 +103,46 @@ News Article to Analyze:
       const k2 = document.getElementById('geminiKey').value.trim();
       const tickers = document.getElementById('tickers').value.trim();
       const output = document.getElementById('output');
-      
-      // --- ADDED: Save credentials to localStorage ---
+      const newsOutput = document.getElementById('news-output'); // Get the news output element
+
+      // Clear previous results
+      output.textContent = 'Preparing to run analysis...';
+      newsOutput.textContent = '';
+
       if (k1) {
         localStorage.setItem(MARKETAUX_KEY_STORAGE, k1);
       }
       if (k2) {
         localStorage.setItem(GEMINI_KEY_STORAGE, k2);
       }
-      // --- END ADDED SECTION ---
 
       if (!k1 || !k2 || !tickers) {
         output.textContent = 'Error: Please fill in all API keys and tickers.';
         return;
       }
-      
+
       output.textContent = 'Loading news from MarketAux...';
       try {
-        const news = await fetchNews(tickers, 3, k1); // Reduced pages to 3 for faster response
+        const news = await fetchNews(tickers, 5, k1);
         if (news.length === 0) {
            output.textContent = 'No news articles found for the given tickers. Try different ones.';
+           newsOutput.textContent = 'No news to display.';
            return;
         }
+
+        // --- ADDED: Display the fetched news headlines ---
+        const formattedNews = news.map((headline, index) => `${index + 1}. ${headline}`).join('\n\n');
+        newsOutput.textContent = formattedNews;
+
         output.textContent = `Found ${news.length} articles. Analyzing with Gemini AI...`;
         const analysis = await analyzeWithAI(news, k2);
         output.textContent = analysis;
       } catch (err) {
         output.textContent = 'Error: ' + err.message;
+        newsOutput.textContent = 'Could not fetch news due to an error.'; // Also update news section on error
       }
     };
 
-    // --- ADDED: Load credentials from localStorage on page load ---
     function loadCredentials() {
       const savedMarketauxKey = localStorage.getItem(MARKETAUX_KEY_STORAGE);
       const savedGeminiKey = localStorage.getItem(GEMINI_KEY_STORAGE);
@@ -136,9 +155,7 @@ News Article to Analyze:
       }
     }
 
-    // Call the function to load keys when the script runs
     loadCredentials();
-    // --- END ADDED SECTION ---
 
   </script>
 </body>

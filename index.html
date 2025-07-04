@@ -1,218 +1,182 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Trading AI Analyzer</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            'inter': ['Inter', 'sans-serif'],
-          },
-          animation: {
-            'fade-in': 'fadeIn 0.5s ease-in-out',
-            'slide-up': 'slideUp 0.3s ease-out',
-          }
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Trading AI Analyzer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+          rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                    }
+                }
+            }
         }
-      }
-    }
-  </script>
-  <style>
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes slideUp {
-      from { transform: translateY(20px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
-    .glass {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-    }
+    </script>
+    <style>
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
-    /* Markdown formatting styles */
-    .markdown-output {
-      font-family: 'Inter', sans-serif;
-      line-height: 1.7;
-      color: #e2e8f0;
-    }
-    .markdown-output h1, .markdown-output h2, .markdown-output h3, .markdown-output h4 {
-      font-weight: 700;
-      margin: 1.5rem 0 0.75rem 0;
-      color: #f1f5f9;
-    }
-    .markdown-output h1 { font-size: 1.5rem; border-bottom: 2px solid #6366f1; padding-bottom: 0.5rem; }
-    .markdown-output h2 { font-size: 1.25rem; color: #a5b4fc; }
-    .markdown-output h3 { font-size: 1.125rem; color: #c4b5fd; }
-    .markdown-output h4 { font-size: 1rem; color: #ddd6fe; }
-    .markdown-output strong, .markdown-output b {
-      font-weight: 600;
-      color: #fbbf24;
-    }
-    .markdown-output em, .markdown-output i {
-      font-style: italic;
-      color: #60a5fa;
-    }
-    .markdown-output ul, .markdown-output ol {
-      margin: 1rem 0;
-      padding-left: 1.5rem;
-    }
-    .markdown-output li {
-      margin: 0.5rem 0;
-      color: #cbd5e1;
-    }
-    .markdown-output p {
-      margin: 1rem 0;
-      color: #cbd5e1;
-    }
-    .markdown-output code {
-      background: rgba(0, 0, 0, 0.3);
-      padding: 0.2rem 0.4rem;
-      border-radius: 0.25rem;
-      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-      color: #34d399;
-      font-size: 0.9em;
-    }
-    .markdown-output blockquote {
-      border-left: 4px solid #6366f1;
-      padding-left: 1rem;
-      margin: 1rem 0;
-      font-style: italic;
-      color: #94a3b8;
-    }
-    .markdown-output hr {
-      border: none;
-      height: 1px;
-      background: linear-gradient(to right, transparent, #6366f1, transparent);
-      margin: 2rem 0;
-    }
-  </style>
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 font-inter">
-  <div class="min-h-screen flex items-center justify-center p-4">
+<div class="min-h-screen flex items-center justify-center p-4">
     <div class="w-full max-w-4xl animate-fade-in">
-      <!-- Header -->
-      <div class="text-center mb-8">
-        <h1 class="text-5xl font-bold text-white mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-          Trading AI Analyzer
-        </h1>
-        <p class="text-gray-300 text-lg">Advanced sentiment analysis powered by AI</p>
-      </div>
-
-      <!-- Main Card -->
-      <div class="glass rounded-3xl p-8 shadow-2xl">
-        <!-- Input Section -->
-        <div class="grid md:grid-cols-2 gap-6 mb-8">
-          <div class="space-y-6">
-            <div class="space-y-2">
-              <label for="marketauxKey" class="block text-sm font-semibold text-gray-200">MarketAux API Key</label>
-              <input id="marketauxKey"
-                     placeholder="Enter your MarketAux API key"
-                     type="password"
-                     class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300 backdrop-blur-sm" />
-            </div>
-
-            <div class="space-y-2">
-              <label for="geminiKey" class="block text-sm font-semibold text-gray-200">Gemini API Key</label>
-              <input id="geminiKey"
-                     placeholder="Enter your Gemini API key"
-                     type="password"
-                     class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-300 backdrop-blur-sm" />
-            </div>
-          </div>
-
-          <div class="space-y-6">
-            <div class="space-y-2">
-              <label for="tickers" class="block text-sm font-semibold text-gray-200">Stock Tickers</label>
-              <input id="tickers"
-                     placeholder="e.g. ^DJI,BTC,AAPL,TSLA"
-                     class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all duration-300 backdrop-blur-sm" />
-              <p class="text-xs text-gray-400">Separate multiple tickers with commas</p>
-            </div>
-
-            <button id="run"
-                    class="w-full py-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2">
-              <span>🚀</span>
-              <span>Run Analysis</span>
-            </button>
-          </div>
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-5xl font-bold text-white mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                Trading AI Analyzer
+            </h1>
+            <p class="text-gray-300 text-lg">Advanced sentiment analysis powered by AI</p>
         </div>
 
-        <!-- Results Section -->
-        <div class="space-y-8">
-          <!-- News Section -->
-          <div class="animate-slide-up">
-            <div class="flex items-center space-x-3 mb-4">
-              <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
-                <span class="text-white text-sm font-bold">📰</span>
-              </div>
-              <h2 class="text-2xl font-bold text-white">Latest News</h2>
-            </div>
-            <div class="bg-black/20 backdrop-blur-sm rounded-2xl border border-white/10 p-6">
-              <pre id="news-output" class="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap overflow-auto max-h-64 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">News articles will appear here after fetching...</pre>
-            </div>
-          </div>
+        <!-- Main Card -->
+        <div class="glass rounded-3xl p-8 shadow-2xl">
+            <!-- Input Section -->
+            <div class="grid md:grid-cols-2 gap-6 mb-8">
+                <div class="space-y-6">
+                    <div class="space-y-2">
+                        <label for="marketauxKey" class="block text-sm font-semibold text-gray-200">MarketAux API
+                            Key</label>
+                        <input id="marketauxKey"
+                               placeholder="Enter your MarketAux API key"
+                               type="password"
+                               class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300 backdrop-blur-sm"/>
+                    </div>
 
-          <!-- Analysis Section -->
-          <div class="animate-slide-up">
-            <div class="flex items-center space-x-3 mb-4">
-              <div class="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-                <span class="text-white text-sm font-bold">🤖</span>
-              </div>
-              <h2 class="text-2xl font-bold text-white">AI Analysis</h2>
+                    <div class="space-y-2">
+                        <label for="geminiKey" class="block text-sm font-semibold text-gray-200">Gemini API Key</label>
+                        <input id="geminiKey"
+                               placeholder="Enter your Gemini API key"
+                               type="password"
+                               class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-300 backdrop-blur-sm"/>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="space-y-2">
+                        <label for="tickers" class="block text-sm font-semibold text-gray-200">Stock Tickers</label>
+                        <input id="tickers"
+                               placeholder="e.g. ^DJI,BTC,AAPL,TSLA"
+                               class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all duration-300 backdrop-blur-sm"/>
+                        <p class="text-xs text-gray-400">Separate multiple tickers with commas</p>
+                    </div>
+
+                    <button id="run"
+                            class="w-full py-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2">
+                        <span>🚀</span>
+                        <span>Run Analysis</span>
+                    </button>
+                </div>
             </div>
-            <div class="bg-black/20 backdrop-blur-sm rounded-2xl border border-white/10 p-6">
-              <div id="output" class="markdown-output text-gray-300 text-sm leading-relaxed overflow-auto max-h-96 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">AI analysis will appear here...</div>
+
+            <!-- Results Section -->
+            <div class="space-y-8">
+                <!-- News Section -->
+                <div class="animate-slide-up">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
+                            <span class="text-white text-sm font-bold">📰</span>
+                        </div>
+                        <h2 class="text-2xl font-bold text-white">Latest News</h2>
+                    </div>
+                    <div class="bg-black/20 backdrop-blur-sm rounded-2xl border border-white/10 p-6">
+                        <pre id="news-output"
+                             class="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap overflow-auto max-h-64 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">News articles will appear here after fetching...</pre>
+                    </div>
+                </div>
+
+                <!-- Analysis Section -->
+                <div class="animate-slide-up">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                            <span class="text-white text-sm font-bold">🤖</span>
+                        </div>
+                        <h2 class="text-2xl font-bold text-white">AI Analysis</h2>
+                    </div>
+                    <div class="bg-black/20 backdrop-blur-sm rounded-2xl border border-white/10 p-6">
+                        <div id="output"
+                             class="markdown-output text-gray-300 text-sm leading-relaxed overflow-auto max-h-96 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+                            AI analysis will appear here...
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
         </div>
-      </div>
 
-      <!-- Footer -->
-      <div class="text-center mt-8">
-        <p class="text-gray-400 text-sm">Powered by MarketAux & Google Gemini AI</p>
-      </div>
+        <!-- Footer -->
+        <div class="text-center mt-8">
+            <p class="text-gray-400 text-sm">Powered by MarketAux & Google Gemini AI</p>
+        </div>
     </div>
-  </div>
+</div>
 
-  <script>
+<script>
     // --- Key constants for localStorage ---
     const MARKETAUX_KEY_STORAGE = 'marketauxApiKey';
     const GEMINI_KEY_STORAGE = 'geminiApiKey';
 
     async function fetchNews(tickers, pagesCount, apiKey) {
-      const allHeadlines = [];
-      const base = 'https://api.marketaux.com/v1/news/all';
-      for (let page = 1; page <= pagesCount; page++) {
-        const url = new URL(base);
-        url.search = new URLSearchParams({
-          symbols: tickers,
-          page,
-          filter_entities: 'true',
-          language: 'en',
-          api_token: apiKey
-        });
-        const res = await fetch(url);
-        if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(`MarketAux API Error: ${errorData.meta?.error?.message || res.statusText}`);
+        const allHeadlines = [];
+        const base = 'https://api.marketaux.com/v1/news/all';
+        for (let page = 1; page <= pagesCount; page++) {
+            const url = new URL(base);
+            url.search = new URLSearchParams({
+                symbols: tickers,
+                page,
+                filter_entities: 'true',
+                language: 'en',
+                api_token: apiKey
+            });
+            const res = await fetch(url);
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(`MarketAux API Error: ${errorData.meta?.error?.message || res.statusText}`);
+            }
+            const data = await res.json();
+            (data.data || []).forEach(a => {
+                allHeadlines.push(`${a.title}: ${a.description}`);
+            });
         }
-        const data = await res.json();
-        (data.data || []).forEach(a => {
-          allHeadlines.push(`${a.title}: ${a.description}`);
-        });
-      }
-      return allHeadlines;
+        return allHeadlines;
     }
 
     async function analyzeWithAI(headlines, apiKey) {
-      const promptHeader = `
+        const promptHeader = `
 Role: You are an expert financial analyst and risk assessor.
 Task: Perform a comprehensive sentiment and impact analysis of the following news articles. Provide your output in a clear, structured format.
 Analysis Dimensions:
@@ -226,128 +190,92 @@ Analysis Dimensions:
 
 News Articles to Analyze:
 `;
-      const payload = {
-        contents: [{ parts: [{ text: promptHeader + headlines.join('\n') }] }]
-      };
-      const res = await fetch(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-goog-api-key': apiKey
-          },
-          body: JSON.stringify(payload)
+        const payload = {
+            contents: [{parts: [{text: promptHeader + headlines.join('\n')}]}]
+        };
+        const res = await fetch(
+            'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-goog-api-key': apiKey
+                },
+                body: JSON.stringify(payload)
+            }
+        );
+        if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(`Gemini API Error: ${errorData.error?.message || res.statusText}`);
         }
-      );
-       if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(`Gemini API Error: ${errorData.error?.message || res.statusText}`);
-        }
-      const json = await res.json();
-      return (json.candidates?.[0]?.content?.parts?.[0]?.text)
-             || 'No response text found.';
+        const json = await res.json();
+        return (json.candidates?.[0]?.content?.parts?.[0]?.text)
+            || 'No response text found.';
     }
 
+    // MARK: formatMarkdown
     function formatMarkdown(text) {
-      // Basic markdown to HTML conversion
-      let html = text
-        // Headers
-        .replace(/^#### (.*$)/gm, '<h4>$1</h4>')
-        .replace(/^### (.*$)/gm, '<h3>$1</h3>')
-        .replace(/^## (.*$)/gm, '<h2>$1</h2>')
-        .replace(/^# (.*$)/gm, '<h1>$1</h1>')
-        // Bold
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/__(.*?)__/g, '<strong>$1</strong>')
-        // Italic
-        .replace(/\*(.*?)\*/g, '<em>$1</em>')
-        .replace(/_(.*?)_/g, '<em>$1</em>')
-        // Code
-        .replace(/`(.*?)`/g, '<code>$1</code>')
-        // Horizontal rule
-        .replace(/^---$/gm, '<hr>')
-        // Blockquotes
-        .replace(/^> (.*)$/gm, '<blockquote>$1</blockquote>')
-        // Bullet points
-        .replace(/^\s*[\*\-\+]\s+(.+)$/gm, '<li>$1</li>')
-        // Numbered lists
-        .replace(/^\s*\d+\.\s+(.+)$/gm, '<li>$1</li>')
-        // Line breaks
-        .replace(/\n\n/g, '</p><p>')
-        .replace(/\n/g, '<br>');
-
-      // Wrap consecutive list items in ul/ol tags
-      html = html.replace(/(<li>.*?<\/li>)(\s*<li>.*?<\/li>)*/g, function(match) {
-        return '<ul>' + match + '</ul>';
-      });
-
-      // Wrap in paragraphs if needed
-      if (!html.startsWith('<h') && !html.startsWith('<ul') && !html.startsWith('<ol')) {
-        html = '<p>' + html + '</p>';
-      }
-
-      return html;
+        return marked.parse(text);
     }
 
     document.getElementById('run').onclick = async () => {
-      const k1 = document.getElementById('marketauxKey').value.trim();
-      const k2 = document.getElementById('geminiKey').value.trim();
-      const tickers = document.getElementById('tickers').value.trim();
-      const output = document.getElementById('output');
-      const newsOutput = document.getElementById('news-output');
+        const k1 = document.getElementById('marketauxKey').value.trim();
+        const k2 = document.getElementById('geminiKey').value.trim();
+        const tickers = document.getElementById('tickers').value.trim();
+        const output = document.getElementById('output');
+        const newsOutput = document.getElementById('news-output');
 
-      // Clear previous results
-      output.innerHTML = 'Preparing to run analysis...';
-      newsOutput.textContent = '';
+        // Clear previous results
+        output.innerHTML = 'Preparing to run analysis...';
+        newsOutput.textContent = '';
 
-      if (k1) {
-        localStorage.setItem(MARKETAUX_KEY_STORAGE, k1);
-      }
-      if (k2) {
-        localStorage.setItem(GEMINI_KEY_STORAGE, k2);
-      }
-
-      if (!k1 || !k2 || !tickers) {
-        output.innerHTML = 'Error: Please fill in all API keys and tickers.';
-        return;
-      }
-
-      output.innerHTML = 'Loading news from MarketAux...';
-      try {
-        const news = await fetchNews(tickers, 5, k1);
-        if (news.length === 0) {
-           output.innerHTML = 'No news articles found for the given tickers. Try different ones.';
-           newsOutput.textContent = 'No news to display.';
-           return;
+        if (k1) {
+            localStorage.setItem(MARKETAUX_KEY_STORAGE, k1);
+        }
+        if (k2) {
+            localStorage.setItem(GEMINI_KEY_STORAGE, k2);
         }
 
-        const formattedNews = news.map((headline, index) => `${index + 1}. ${headline}`).join('\n\n');
-        newsOutput.textContent = formattedNews;
+        if (!k1 || !k2 || !tickers) {
+            output.innerHTML = 'Error: Please fill in all API keys and tickers.';
+            return;
+        }
 
-        output.innerHTML = `Found ${news.length} articles. Analyzing with Gemini AI...`;
-        const analysis = await analyzeWithAI(news, k2);
-        output.innerHTML = formatMarkdown(analysis);
-      } catch (err) {
-        output.innerHTML = 'Error: ' + err.message;
-        newsOutput.textContent = 'Could not fetch news due to an error.';
-      }
+        output.innerHTML = 'Loading news from MarketAux...';
+        try {
+            const news = await fetchNews(tickers, 5, k1);
+            if (news.length === 0) {
+                output.innerHTML = 'No news articles found for the given tickers. Try different ones.';
+                newsOutput.textContent = 'No news to display.';
+                return;
+            }
+
+            const formattedNews = news.map((headline, index) => `${index + 1}. ${headline}`).join('\n\n');
+            newsOutput.textContent = formattedNews;
+
+            output.innerHTML = `Found ${news.length} articles. Analyzing with Gemini AI...`;
+            const analysis = await analyzeWithAI(news, k2);
+            output.innerHTML = formatMarkdown(analysis);
+        } catch (err) {
+            output.innerHTML = 'Error: ' + err.message;
+            newsOutput.textContent = 'Could not fetch news due to an error.';
+        }
     };
 
     function loadCredentials() {
-      const savedMarketauxKey = localStorage.getItem(MARKETAUX_KEY_STORAGE);
-      const savedGeminiKey = localStorage.getItem(GEMINI_KEY_STORAGE);
+        const savedMarketauxKey = localStorage.getItem(MARKETAUX_KEY_STORAGE);
+        const savedGeminiKey = localStorage.getItem(GEMINI_KEY_STORAGE);
 
-      if (savedMarketauxKey) {
-        document.getElementById('marketauxKey').value = savedMarketauxKey;
-      }
-      if (savedGeminiKey) {
-        document.getElementById('geminiKey').value = savedGeminiKey;
-      }
+        if (savedMarketauxKey) {
+            document.getElementById('marketauxKey').value = savedMarketauxKey;
+        }
+        if (savedGeminiKey) {
+            document.getElementById('geminiKey').value = savedGeminiKey;
+        }
     }
 
     loadCredentials();
 
-  </script>
+</script>
 </body>
 </html>

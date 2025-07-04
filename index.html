@@ -215,7 +215,8 @@ News Articles to Analyze:
 
     // MARK: formatMarkdown
     function formatMarkdown(text) {
-        return marked.parse(text);
+        return text;
+        //return marked.parse(text);
     }
 
     document.getElementById('run').onclick = async () => {

@@ -5,22 +5,26 @@
   <title>Trading AI Analyzer</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 2rem; }
-    input, button { padding: 0.5rem; margin: 0.5rem 0; width: 100%; }
-    pre { background: #f4f4f4; padding: 1rem; overflow-x: auto; }
+    input, button { padding: 0.5rem; margin: 0.5rem 0; width: 100%; box-sizing: border-box; }
+    pre { background: #f4f4f4; padding: 1rem; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; }
   </style>
 </head>
 <body>
   <h1>Trading AI Analyzer</h1>
-  <label>MarketAux API Key</label>
-  <input id="marketauxKey" placeholder="Enter MARKETAUX_API_KEY" />
-  <label>Gemini API Key</label>
-  <input id="geminiKey" placeholder="Enter GEMINI_API_KEY" />
-  <label>Tickers (comma-separated)</label>
+  <label for="marketauxKey">MarketAux API Key</label>
+  <input id="marketauxKey" placeholder="Enter MARKETAUX_API_KEY" type="password" />
+  <label for="geminiKey">Gemini API Key</label>
+  <input id="geminiKey" placeholder="Enter GEMINI_API_KEY" type="password" />
+  <label for="tickers">Tickers (comma-separated)</label>
   <input id="tickers" placeholder="e.g. ^DJI,BTC,AAPL" />
   <button id="run">Run Analysis</button>
   <pre id="output"></pre>
 
   <script>
+    // --- Key constants for localStorage ---
+    const MARKETAUX_KEY_STORAGE = 'marketauxApiKey';
+    const GEMINI_KEY_STORAGE = 'geminiApiKey';
+
     async function fetchNews(tickers, pagesCount, apiKey) {
       const allHeadlines = [];
       const base = 'https://api.marketaux.com/v1/news/all';
@@ -34,6 +38,10 @@
           api_token: apiKey
         });
         const res = await fetch(url);
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(`MarketAux API Error: ${errorData.meta?.error?.message || res.statusText}`);
+        }
         const data = await res.json();
         (data.data || []).forEach(a => {
           allHeadlines.push(`${a.title}: ${a.description}`);
@@ -61,7 +69,7 @@ News Article to Analyze:
         contents: [{ parts: [{ text: promptHeader + headlines.join('\n') }] }]
       };
       const res = await fetch(
-        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', // Updated to a more common model
         {
           method: 'POST',
           headers: {
@@ -71,6 +79,10 @@ News Article to Analyze:
           body: JSON.stringify(payload)
         }
       );
+       if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(`Gemini API Error: ${errorData.error?.message || res.statusText}`);
+        }
       const json = await res.json();
       return (json.candidates?.[0]?.content?.parts?.[0]?.text)
              || 'No response text found.';
@@ -81,15 +93,53 @@ News Article to Analyze:
       const k2 = document.getElementById('geminiKey').value.trim();
       const tickers = document.getElementById('tickers').value.trim();
       const output = document.getElementById('output');
-      output.textContent = 'Loading…';
+      
+      // --- ADDED: Save credentials to localStorage ---
+      if (k1) {
+        localStorage.setItem(MARKETAUX_KEY_STORAGE, k1);
+      }
+      if (k2) {
+        localStorage.setItem(GEMINI_KEY_STORAGE, k2);
+      }
+      // --- END ADDED SECTION ---
+
+      if (!k1 || !k2 || !tickers) {
+        output.textContent = 'Error: Please fill in all API keys and tickers.';
+        return;
+      }
+      
+      output.textContent = 'Loading news from MarketAux...';
       try {
-        const news = await fetchNews(tickers, 5, k1);
+        const news = await fetchNews(tickers, 3, k1); // Reduced pages to 3 for faster response
+        if (news.length === 0) {
+           output.textContent = 'No news articles found for the given tickers. Try different ones.';
+           return;
+        }
+        output.textContent = `Found ${news.length} articles. Analyzing with Gemini AI...`;
         const analysis = await analyzeWithAI(news, k2);
         output.textContent = analysis;
       } catch (err) {
         output.textContent = 'Error: ' + err.message;
       }
     };
+
+    // --- ADDED: Load credentials from localStorage on page load ---
+    function loadCredentials() {
+      const savedMarketauxKey = localStorage.getItem(MARKETAUX_KEY_STORAGE);
+      const savedGeminiKey = localStorage.getItem(GEMINI_KEY_STORAGE);
+
+      if (savedMarketauxKey) {
+        document.getElementById('marketauxKey').value = savedMarketauxKey;
+      }
+      if (savedGeminiKey) {
+        document.getElementById('geminiKey').value = savedGeminiKey;
+      }
+    }
+
+    // Call the function to load keys when the script runs
+    loadCredentials();
+    // --- END ADDED SECTION ---
+
   </script>
 </body>
 </html>
